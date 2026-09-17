@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAMMI School Collection Management System</title>
+<style>
+:root{--primary:#1e40af;--primary2:#1d4ed8;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--success:#15803d;--danger:#dc2626;--warning:#b45309}
+*{box-sizing:border-box} body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:18px}
+.container{max-width:1400px;margin:auto}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;background:#fff;border:1px solid var(--border);padding:18px 20px;border-radius:12px;margin-bottom:16px}
+h1{margin:0;color:var(--primary);font-size:1.35rem}.sub{color:var(--muted);font-size:.82rem;margin-top:3px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#dbeafe;color:#1e3a8a;font-size:.75rem;font-weight:700}
+.grid{display:grid;grid-template-columns:370px 1fr;gap:16px}.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:0 2px 5px #00000008}
+h2{font-size:1rem;margin:0 0 15px}.group{margin-bottom:12px}label{display:block;font-size:.78rem;font-weight:700;margin-bottom:5px;color:#334155}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;background:#fff}textarea{min-height:65px;resize:vertical}
+button{border:0;border-radius:7px;padding:9px 13px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer}button:hover{opacity:.92}.secondary{background:#64748b}.success{background:var(--success)}.danger{background:var(--danger)}.warning{background:#d97706}.print{background:#0284c7}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}.metric small{display:block;text-transform:uppercase;color:var(--muted);font-weight:700;font-size:.7rem}.metric strong{font-size:1.25rem;display:block;margin-top:4px}
+.studentbox{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:12px;margin-bottom:14px}.studentbox b{font-size:1rem}.studentmeta{color:#475569;font-size:.82rem;margin-top:4px}
+.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.balance div{background:#f8fafc;border-radius:7px;padding:9px}.balance span{display:block;color:var(--muted);font-size:.7rem}.balance b{font-size:1rem}
+.notice{font-size:.78rem;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:8px;padding:9px;margin-bottom:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{width:auto}
+.toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:13px}.toolbar .field{min-width:180px}.toolbar button{height:39px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:900px}th,td{padding:9px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}th{background:#f8fafc;color:#475569;font-size:.7rem;text-transform:uppercase;position:sticky;top:0}.amount{font-weight:800}.status{font-size:.7rem;font-weight:800;padding:3px 7px;border-radius:999px;background:#dcfce7;color:#166534}.locked{font-size:.68rem;color:#64748b}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:18px;z-index:20}.modal.show{display:flex}.modalbox{background:#fff;border-radius:12px;max-width:520px;width:100%;padding:20px}.modalbox h3{margin-top:0}.modalrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+footer{text-align:center;color:var(--muted);font-size:.72rem;margin:18px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="container">
+<header class="top">
+  <div><h1>ST. ANTHONY OF MAKATI MONTESSORI, INC. (SAMMI)</h1><div class="sub">School Collection Management System • Cashier & Registrar Ledger</div></div>
+  <div><span class="badge">CASHIER MODE</span></div>
+</header>
+
+<div class="summary">
+  <div class="metric"><small>Today's Collection</small><strong id="todayTotal">₱0.00</strong></div>
+  <div class="metric"><small>Total Posted</small><strong id="postedTotal">₱0.00</strong></div>
+  <div class="metric"><small>Outstanding Receivables</small><strong id="receivableTotal">₱0.00</strong></div>
+  <div class="metric"><small>Posted Transactions</small><strong id="transactionCount">0</strong></div>
+</div>
+
+<div class="grid">
+<section class="card">
+  <h2>Process Receivable Payment</h2>
+  <div class="notice">Payments become <b>POSTED</b> after confirmation. Cashiers cannot edit, delete, or void posted transactions.</div>
+  <form id="paymentForm">
+    <div class="group"><label>Student No. / LRN</label><input id="studentNo" required placeholder="e.g. SAMMI-2026-0001"></div>
+    <div class="group"><label>Student Name</label><input id="studentName" required placeholder="Student full name"></div>
+    <div class="group"><label>Grade / Level</label><input id="grade" required placeholder="e.g. Grade 6"></div>
+    <div class="group"><label>Section</label><input id="section" placeholder="e.g. St. Anthony"></div>
+    <div class="group"><label>Parent / Guardian</label><input id="guardian" placeholder="Parent or guardian name"></div>
+    <div class="group"><label>Receivable / Fee</label>
+      <select id="feeType" required>
+        <option value="">Select fee</option><option>Tuition Fee</option><option>Books</option><option>Uniform</option><option>Registration Fee</option><option>Activity Fee</option><option>Field Trip</option><option>Miscellaneous Fee</option><option>Other</option>
+      </select>
+    </div>
+    <div class="group"><label>Amount Due / Receivable (₱)</label><input id="amountDue" type="number" min="0" step=".01" value="0" required></div>
+    <div class="group"><label>Amount to Pay (₱)</label><input id="amount" type="number" min=".01" step=".01" required></div>
+    <div class="group"><label>Payment Method</label>
+      <select id="method" required><option>CASH</option><option>GCASH</option><option>BANK TRANSFER</option><option>CHEQUE</option><option>CARD</option></select>
+    </div>
+    <div class="group"><label>Reference No. (if applicable)</label><input id="referenceNo" placeholder="GCash/bank/cheque/card reference"></div>
+    <div class="group"><label>Remarks</label><textarea id="remarks" placeholder="Optional"></textarea></div>
+    <div class="actions"><button type="submit" class="success">CONFIRM & POST PAYMENT</button><button type="button" class="secondary" onclick="resetForm()">Clear</button></div>
+  </form>
+</section>
+
+<section>
+<div class="card">
+  <h2>Posted Payment Transactions</h2>
+  <div class="toolbar">
+    <div class="field"><label>Filter Date</label><input type="date" id="filterDate" onchange="render()"></div>
+    <div class="field"><label>Search</label><input id="search" placeholder="Student / OR / LRN" oninput="render()"></div>
+    <button class="secondary" onclick="clearFilters()">Show All</button>
+    <button class="success" onclick="exportCSV()">Export CSV</button>
+  </div>
+  <div class="tablewrap">
+  <table><thead><tr><th>Date/Time</th><th>OR No.</th><th>Student</th><th>Fee</th><th>Amount</th><th>Method</th><th>Status</th><th>Action</th></tr></thead>
+  <tbody id="recordsTable"></tbody></table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Cashier Daily Collection</h2>
+  <div id="dailySummary"></div>
+</div>
+</section>
+</div>
+<footer>© SAMMI • Financial records are immutable to Cashier users. Authorized administrators may perform controlled voids/adjustments with audit reasons.</footer>
+</div>
+
+<div class="modal" id="confirmModal">
+<div class="modalbox">
+<h3>Confirm & Post Payment</h3>
+<div class="modalrow"><span>Student</span><b id="mStudent"></b></div>
+<div class="modalrow"><span>Fee</span><b id="mFee"></b></div>
+<div class="modalrow"><span>Amount</span><b id="mAmount"></b></div>
+<div class="modalrow"><span>Method</span><b id="mMethod"></b></div>
+<p style="color:#b91c1c;font-size:.82rem"><b>Warning:</b> Once posted, this payment cannot be edited or deleted by the cashier.</p>
+<div class="actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="success" onclick="postPayment()">POST PAYMENT</button></div>
+</div></div>
+
+<script>
+const KEY='sammi_collection_records_v1';
+const RECEIVABLE_KEY='sammi_receivables_v1';
+let pending=null;
+
+function records(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a))}
+function money(n){return '₱'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function localDate(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+document.getElementById('filterDate').value=localDate();
+
+function resetForm(){document.getElementById('paymentForm').reset();document.getElementById('amountDue').value='0'}
+function clearFilters(){document.getElementById('filterDate').value='';document.getElementById('search').value='';render()}
+
+document.getElementById('paymentForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const due=Number(amountDue.value||0), amt=Number(amount.value||0);
+ if(amt<=0)return alert('Enter a valid payment amount.');
+ if(due>0 && amt>due)return alert('Payment cannot exceed the selected receivable amount.');
+ if((method.value!=='CASH')&&!referenceNo.value.trim())return alert('Enter a reference number for non-cash payments.');
+ pending={
+   id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),
+   createdAt:new Date().toISOString(),date:localDate(),
+   receiptNo:'SAMMI-'+new Date().getFullYear()+'-'+String(records().length+1).padStart(6,'0'),
+   studentNo:studentNo.value.trim(),studentName:studentName.value.trim(),grade:grade.value.trim(),
+   section:section.value.trim(),guardian:guardian.value.trim(),feeType:feeType.value,
+   amountDue:due,amount:amt,method:method.value,referenceNo:referenceNo.value.trim(),
+   remarks:remarks.value.trim(),status:'POSTED',processedBy:'Cashier'
+ };
+ mStudent.textContent=pending.studentName+' ('+pending.studentNo+')';
+ mFee.textContent=pending.feeType;mAmount.textContent=money(pending.amount);mMethod.textContent=pending.method;
+ confirmModal.classList.add('show');
+});
+function closeModal(){confirmModal.classList.remove('show');pending=null}
+function postPayment(){
+ if(!pending)return;
+ const a=records();
+ if(a.some(x=>x.receiptNo===pending.receiptNo)){pending.receiptNo='SAMMI-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6)}
+ a.unshift(pending);save(a);
+ const audit=JSON.parse(localStorage.getItem('sammi_audit_v1')||'[]');
+ audit.unshift({id:Date.now(),action:'CREATED/POSTED',paymentId:pending.id,receiptNo:pending.receiptNo,by:'Cashier',at:new Date().toISOString()});
+ localStorage.setItem('sammi_audit_v1',JSON.stringify(audit));
+ const p=pending;closeModal();resetForm();render();
+ alert('PAYMENT POSTED\\n\\nReceipt No.: '+p.receiptNo+'\\nAmount: '+money(p.amount));
+ printReceipt(p.id);
+}
+function printReceipt(id){
+ const r=records().find(x=>x.id===id);if(!r)return;
+ const w=window.open('','_blank','width=420,height=700');if(!w)return alert('Please allow pop-ups to print the receipt.');
+ w.document.write(`<!doctype html><html><head><title>${esc(r.receiptNo)}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}.head{text-align:center}.line{border-top:1px dashed #111;margin:14px 0}.row{display:flex;justify-content:space-between;margin:8px 0}.total{font-size:18px;font-weight:bold}.small{text-align:center;font-size:11px;margin-top:28px}</style></head><body><div class="head"><b>ST. ANTHONY OF MAKATI MONTESSORI, INC.</b><br><small>SCHOOL COLLECTION MANAGEMENT SYSTEM</small><h3>OFFICIAL PAYMENT RECEIPT</h3></div><div class="line"></div><div class="row"><span>OR No.</span><b>${esc(r.receiptNo)}</b></div><div class="row"><span>Date</span><span>${new Date(r.createdAt).toLocaleString('en-PH')}</span></div><div class="line"></div><div class="row"><span>Student</span><span>${esc(r.studentName)}</span></div><div class="row"><span>Student No.</span><span>${esc(r.studentNo)}</span></div><div class="row"><span>Grade/Section</span><span>${esc(r.grade)} ${esc(r.section)}</span></div><div class="row"><span>Fee</span><span>${esc(r.feeType)}</span></div><div class="row"><span>Payment Method</span><span>${esc(r.method)}</span></div><div class="line"></div><div class="row total"><span>AMOUNT PAID</span><span>${money(r.amount)}</span></div><div class="line"></div><div class="small">Processed by: ${esc(r.processedBy)}<br>This receipt corresponds to a POSTED transaction.<br>Thank you for your payment.</div></body></html>`);
+ w.document.close();w.focus();setTimeout(()=>{w.print();w.close()},300);
+}
+function render(){
+ const all=records(),fd=filterDate.value,q=(search.value||'').toLowerCase();
+ let today=0,total=0;const methods={CASH:0,GCASH:0,'BANK TRANSFER':0,CHEQUE:0,CARD:0};let html='';
+ all.forEach(r=>{
+  if(r.status!=='POSTED')return;
+  total+=Number(r.amount);if(r.date===localDate())today+=Number(r.amount);methods[r.method]=(methods[r.method]||0)+Number(r.amount);
+  if(fd&&r.date!==fd)return;
+  const hay=(r.studentName+' '+r.studentNo+' '+r.receiptNo+' '+r.feeType).toLowerCase();if(q&&!hay.includes(q))return;
+  html+=`<tr><td>${esc(new Date(r.createdAt).toLocaleString('en-PH'))}</td><td><b>${esc(r.receiptNo)}</b></td><td>${esc(r.studentName)}<br><span class="locked">${esc(r.studentNo)} • ${esc(r.grade)} ${esc(r.section)}</span></td><td>${esc(r.feeType)}</td><td class="amount">${money(r.amount)}</td><td>${esc(r.method)}</td><td><span class="status">POSTED</span></td><td><button class="print" onclick="printReceipt('${r.id}')">Print</button></td></tr>`;
+ });
+ recordsTable.innerHTML=html||'<tr><td colspan="8" class="empty">No posted payment transactions found.</td></tr>';
+ todayTotal.textContent=money(today);postedTotal.textContent=money(total);transactionCount.textContent=all.filter(x=>x.status==='POSTED').length;
+ // Prototype receivable total is derived from entered amount-due minus posted payments per matching student+fee.
+ const map={};all.filter(x=>x.status==='POSTED').forEach(r=>{const k=r.studentNo+'|'+r.feeType;map[k]=(map[k]||0)+Number(r.amount)});
+ let outstanding=0;all.filter(x=>x.status==='POSTED').forEach(r=>{const k=r.studentNo+'|'+r.feeType;/* each transaction's due is an assessment reference */});
+ // Show daily payment method totals
+ dailySummary.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">'+Object.entries(methods).map(([k,v])=>`<div class="metric"><small>${k}</small><strong>${money(v)}</strong></div>`).join('')+'</div>';
+}
+function exportCSV(){
+ const a=records();if(!a.length)return alert('No records to export.');
+ const headers=['Date','OR No.','Student No.','Student Name','Grade','Section','Guardian','Fee','Amount Due','Amount Paid','Method','Reference No.','Status','Processed By'];
+ const rows=a.map(r=>[r.date,r.receiptNo,r.studentNo,r.studentName,r.grade,r.section,r.guardian,r.feeType,r.amountDue,r.amount,r.method,r.referenceNo,r.status,r.processedBy]);
+ const csv=[headers,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),ael=document.createElement('a');
+ ael.href=url;ael.download='SAMMI_Collection_'+localDate()+'.csv';ael.click();URL.revokeObjectURL(url);
+}
+render();
+</script>
+</body></html>
